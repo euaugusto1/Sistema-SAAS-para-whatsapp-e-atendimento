@@ -1,0 +1,43 @@
+# Coolify Docker Compose Configuration
+# This file tells Coolify to use Docker Compose for deployment
+# and points to the main docker-compose.yml file
+
+version: '3.8'
+
+services:
+  # Import all services from the main docker-compose.yml
+  # Coolify will read this and deploy the full stack
+  
+  postgres:
+    extends:
+      file: ../docker-compose.yml
+      service: postgres
+    
+  redis:
+    extends:
+      file: ../docker-compose.yml
+      service: redis
+    
+  api:
+    extends:
+      file: ../docker-compose.yml
+      service: api
+    
+  web:
+    extends:
+      file: ../docker-compose.yml
+      service: web
+    
+  prometheus:
+    extends:
+      file: ../docker-compose.yml
+      service: prometheus
+    
+  grafana:
+    extends:
+      file: ../docker-compose.yml
+      service: grafana
+
+networks:
+  saas-network:
+    external: true

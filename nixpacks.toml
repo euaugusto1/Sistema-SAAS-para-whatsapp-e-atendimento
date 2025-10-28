@@ -1,0 +1,11 @@
+# Disable Nixpacks auto-detection
+# This project uses Docker Compose for deployment
+
+[phases.setup]
+nixPkgs = []
+
+[phases.build]
+cmds = ["echo 'This project uses Docker Compose. Please use docker-compose.yml for deployment.'"]
+
+[phases.start]
+cmd = "echo 'Please deploy using Docker Compose instead of Nixpacks.'"

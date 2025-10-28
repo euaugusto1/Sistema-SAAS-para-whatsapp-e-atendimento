@@ -1,0 +1,14 @@
+{
+  "type": "docker-compose",
+  "dockerComposeFile": "docker-compose.yml",
+  "services": {
+    "web": {
+      "port": 3000,
+      "protocol": "http",
+      "domains": ["dcsgog88ccgsoc40848ocg0w.projetojm.org"]
+    }
+  },
+  "env": {
+    "NODE_ENV": "production"
+  }
+}
