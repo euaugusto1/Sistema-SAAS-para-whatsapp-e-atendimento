@@ -1,0 +1,69 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+coverage/
+.nyc_output/
+
+# Database
+*.sqlite
+*.sqlite3
+*.db
+prisma/migrations/*.sql
+prisma/dev.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pnpm-debug.log*
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Docker
+*.env.docker
+
+# Temporary files
+*.tmp
+.cache/
+.temp/
+
+# Uploads (se não quiser versionar)
+uploads/
+
+# Build info
+.turbo/
+.next/cache/
+
+# Backup files
+*.backup
+backups/

@@ -1,0 +1,442 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id            String     @id @default(uuid())
+  email         String     @unique
+  passwordHash  String     @map("password_hash")
+  name          String?
+  phone         String?
+  avatarUrl     String?    @map("avatar_url")
+  status        UserStatus @default(ACTIVE)
+  emailVerified Boolean    @default(false) @map("email_verified")
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+  planId        String?    @map("plan_id")
+
+  plan               Plan?                @relation(fields: [planId], references: [id])
+  memberships        OrganizationMember[]
+  ownedOrganizations Organization[]       @relation("OrganizationOwner")
+  sessions           Session[]
+  invites            OrganizationInvite[] @relation("OrganizationInviteInviter")
+  subscriptions      Subscription[]
+  createdCampaigns   Campaign[]           @relation("CampaignCreatedBy")
+  payments           Payment[]
+  invoices           Invoice[]
+
+  @@map("users")
+}
+
+model Organization {
+  id        String   @id @default(uuid())
+  ownerId   String   @map("owner_id")
+  name      String
+  slug      String   @unique
+  logoUrl   String?  @map("logo_url")
+  settings  Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  owner     User                 @relation("OrganizationOwner", fields: [ownerId], references: [id])
+  members   OrganizationMember[]
+  invites   OrganizationInvite[]
+  contacts  Contact[]
+  lists     ContactList[]
+  templates MessageTemplate[]
+  campaigns Campaign[]
+  instances WhatsappInstance[]
+  messages  Message[]
+
+  @@map("organizations")
+}
+
+model OrganizationMember {
+  id             String     @id @default(uuid())
+  organizationId String     @map("organization_id")
+  userId         String     @map("user_id")
+  role           MemberRole @default(MEMBER)
+  permissions    Json       @default("{}")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  joinedAt       DateTime?  @map("joined_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@map("organization_members")
+}
+
+enum MemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+model OrganizationInvite {
+  id             String     @id @default(uuid())
+  organizationId String     @map("organization_id")
+  email          String
+  role           MemberRole @default(MEMBER)
+  inviterId      String     @map("inviter_id")
+  name           String?
+  token          String     @unique
+  createdAt      DateTime   @default(now()) @map("created_at")
+  acceptedAt     DateTime?  @map("accepted_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  inviter      User         @relation("OrganizationInviteInviter", fields: [inviterId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, email])
+  @@map("organization_invites")
+}
+
+model Session {
+  id               String   @id @default(uuid())
+  userId           String   @map("user_id")
+  refreshTokenHash String   @map("refresh_token_hash")
+  expiresAt        DateTime @map("expires_at")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model Plan {
+  id            String   @id @default(uuid())
+  name          String
+  description   String?
+  priceMonthly  Decimal? @map("price_monthly") @db.Decimal(10, 2)
+  priceYearly   Decimal? @map("price_yearly") @db.Decimal(10, 2)
+  messagesLimit Int?     @map("messages_limit")
+  contactsLimit Int?     @map("contacts_limit")
+  features      Json     @default("{}")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  users         User[]
+  subscriptions Subscription[]
+
+  @@map("plans")
+}
+
+model Subscription {
+  id                 String             @id @default(uuid())
+  userId             String             @map("user_id")
+  planId             String             @map("plan_id")
+  status             SubscriptionStatus
+  currentPeriodStart DateTime           @map("current_period_start")
+  currentPeriodEnd   DateTime           @map("current_period_end")
+  cancelAtPeriodEnd  Boolean            @default(false) @map("cancel_at_period_end")
+  canceledAt         DateTime?          @map("canceled_at")
+  paymentProvider    PaymentProvider    @map("payment_provider")
+  stripeCustomerId   String?            @map("stripe_customer_id")
+  stripeSubscriptionId String?          @map("stripe_subscription_id")
+  mercadopagoCustomerId String?         @map("mercadopago_customer_id")
+  mercadopagoSubscriptionId String?     @map("mercadopago_subscription_id")
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+
+  plan     Plan      @relation(fields: [planId], references: [id], onDelete: Cascade)
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payments Payment[]
+  invoices Invoice[]
+
+  @@map("subscriptions")
+}
+
+model Payment {
+  id              String          @id @default(uuid())
+  subscriptionId  String?         @map("subscription_id")
+  userId          String          @map("user_id")
+  amount          Decimal         @db.Decimal(10, 2)
+  currency        String          @default("BRL")
+  status          PaymentStatus
+  paymentProvider PaymentProvider @map("payment_provider")
+  paymentMethod   String?         @map("payment_method")
+  stripePaymentIntentId String?   @map("stripe_payment_intent_id")
+  mercadopagoPaymentId String?    @map("mercadopago_payment_id")
+  metadata        Json            @default("{}")
+  paidAt          DateTime?       @map("paid_at")
+  failedAt        DateTime?       @map("failed_at")
+  refundedAt      DateTime?       @map("refunded_at")
+  errorMessage    String?         @map("error_message")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+model Invoice {
+  id             String        @id @default(uuid())
+  subscriptionId String        @map("subscription_id")
+  userId         String        @map("user_id")
+  invoiceNumber  String        @unique @map("invoice_number")
+  amount         Decimal       @db.Decimal(10, 2)
+  currency       String        @default("BRL")
+  status         InvoiceStatus
+  dueDate        DateTime      @map("due_date")
+  paidAt         DateTime?     @map("paid_at")
+  description    String?
+  items          Json          @default("[]")
+  metadata       Json          @default("{}")
+  pdfUrl         String?       @map("pdf_url")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("invoices")
+}
+
+model Contact {
+  id             String   @id @default(uuid())
+  organizationId String   @map("organization_id")
+  phone          String
+  name           String?
+  email          String?
+  customFields   Json     @default("{}") @map("custom_fields")
+  tags           String[]
+  notes          String?
+  isBlocked      Boolean  @default(false) @map("is_blocked")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization    Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  messages        Message[]
+  listMemberships ContactListMember[]
+  campaignEntries CampaignRecipient[]
+
+  @@unique([organizationId, phone])
+  @@map("contacts")
+}
+
+model ContactList {
+  id             String   @id @default(uuid())
+  organizationId String   @map("organization_id")
+  name           String
+  description    String?
+  contactsCount  Int      @default(0) @map("contacts_count")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  members      ContactListMember[]
+
+  @@map("contact_lists")
+}
+
+model ContactListMember {
+  id        String   @id @default(uuid())
+  listId    String   @map("list_id")
+  contactId String   @map("contact_id")
+  addedAt   DateTime @default(now()) @map("added_at")
+
+  list    ContactList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  contact Contact     @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@unique([listId, contactId])
+  @@map("contact_list_members")
+}
+
+model MessageTemplate {
+  id             String   @id @default(uuid())
+  organizationId String   @map("organization_id")
+  name           String
+  content        String
+  variables      String[]
+  mediaUrl       String?  @map("media_url")
+  mediaType      String?  @map("media_type")
+  buttons        Json?
+  category       String?
+  isFavorite     Boolean  @default(false) @map("is_favorite")
+  usageCount     Int      @default(0) @map("usage_count")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  campaigns    Campaign[]
+
+  @@map("message_templates")
+}
+
+model WhatsappInstance {
+  id             String         @id @default(uuid())
+  organizationId String         @map("organization_id")
+  name           String
+  phoneNumber    String?        @unique @map("phone_number")
+  qrCode         String?        @map("qr_code")
+  status         InstanceStatus @default(DISCONNECTED)
+  webhookUrl     String?        @map("webhook_url")
+  apiKey         String?        @map("api_key")
+  lastSeen       DateTime?      @map("last_seen")
+  settings       Json           @default("{}")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  campaigns    Campaign[]
+  messages     Message[]
+
+  @@map("whatsapp_instances")
+}
+
+model Campaign {
+  id              String         @id @default(uuid())
+  organizationId  String         @map("organization_id")
+  instanceId      String?        @map("instance_id")
+  templateId      String?        @map("template_id")
+  name            String
+  status          CampaignStatus @default(DRAFT)
+  scheduledAt     DateTime?      @map("scheduled_at")
+  startedAt       DateTime?      @map("started_at")
+  completedAt     DateTime?      @map("completed_at")
+  totalRecipients Int            @default(0) @map("total_recipients")
+  sentCount       Int            @default(0) @map("sent_count")
+  deliveredCount  Int            @default(0) @map("delivered_count")
+  failedCount     Int            @default(0) @map("failed_count")
+  minDelaySeconds Int            @default(30) @map("min_delay_seconds")
+  maxDelaySeconds Int            @default(60) @map("max_delay_seconds")
+  settings        Json           @default("{}")
+  createdById     String         @map("created_by")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  organization Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  instance     WhatsappInstance?   @relation(fields: [instanceId], references: [id], onDelete: SetNull)
+  template     MessageTemplate?    @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  createdBy    User                @relation("CampaignCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+  recipients   CampaignRecipient[]
+  messages     Message[]
+
+  @@map("campaigns")
+}
+
+model CampaignRecipient {
+  id           String          @id @default(uuid())
+  campaignId   String          @map("campaign_id")
+  contactId    String?         @map("contact_id")
+  phone        String
+  status       RecipientStatus @default(PENDING)
+  variables    Json?
+  sentAt       DateTime?       @map("sent_at")
+  deliveredAt  DateTime?       @map("delivered_at")
+  readAt       DateTime?       @map("read_at")
+  errorMessage String?         @map("error_message")
+  retryCount   Int             @default(0) @map("retry_count")
+  createdAt    DateTime        @default(now()) @map("created_at")
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  contact  Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+
+  @@map("campaign_recipients")
+}
+
+model Message {
+  id             String           @id @default(uuid())
+  organizationId String           @map("organization_id")
+  instanceId     String?          @map("instance_id")
+  campaignId     String?          @map("campaign_id")
+  contactId      String?          @map("contact_id")
+  phone          String
+  direction      MessageDirection
+  content        String?
+  mediaUrl       String?          @map("media_url")
+  mediaType      String?          @map("media_type")
+  status         MessageStatus    @default(PENDING)
+  errorMessage   String?          @map("error_message")
+  metadata       Json             @default("{}")
+  sentAt         DateTime         @default(now()) @map("sent_at")
+  deliveredAt    DateTime?        @map("delivered_at")
+  readAt         DateTime?        @map("read_at")
+
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  instance     WhatsappInstance? @relation(fields: [instanceId], references: [id], onDelete: SetNull)
+  campaign     Campaign?         @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  contact      Contact?          @relation(fields: [contactId], references: [id], onDelete: SetNull)
+
+  @@map("messages")
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  CANCELLED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  TRIALING
+  PAST_DUE
+  CANCELLED
+}
+
+enum InstanceStatus {
+  CONNECTED
+  DISCONNECTED
+  BANNED
+  CONNECTING
+}
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  SENDING
+  COMPLETED
+  FAILED
+  PAUSED
+}
+
+enum RecipientStatus {
+  PENDING
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+enum MessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum MessageStatus {
+  PENDING
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+enum PaymentProvider {
+  STRIPE
+  MERCADOPAGO
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+  CANCELED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  OPEN
+  PAID
+  VOID
+  UNCOLLECTIBLE
+}

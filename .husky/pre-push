@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run type check on API
+cd apps/api && npm run build --if-present
+
+# Run type check on Web
+cd ../web && npm run build --if-present

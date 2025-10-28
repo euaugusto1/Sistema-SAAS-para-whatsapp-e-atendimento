@@ -1,0 +1,54 @@
+/* Global styles */
+:root{
+	--bg:#fbfbfd;
+	--muted:#6b7280;
+	--accent-1:#0f172a;
+	--accent-2:#0b1220;
+	--primary-1:#ff7a18;
+	--primary-2:#ff3a3a;
+}
+
+html,body,#__next{height:100%;}
+body{margin:0;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;background:var(--bg);color:#0f172a;line-height:1.6}
+.container{max-width:1100px;margin:0 auto;padding:1.25rem}
+
+/* Header / Nav */
+.site-nav{display:flex;align-items:center;justify-content:space-between;padding:0.75rem 0}
+.site-nav .brand{display:flex;align-items:center;gap:0.75rem}
+.brand .logo{width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,var(--primary-1),var(--primary-2));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
+.site-nav a{color:var(--accent-1);text-decoration:none}
+.site-nav .nav-actions a{margin-left:0.5rem}
+
+/* Hero */
+.hero{background:linear-gradient(135deg,var(--accent-1) 0%,var(--accent-2) 60%);padding-top:3.5rem;padding-bottom:3.5rem;color:#fff;border-radius:10px}
+.hero .lead{color:rgba(255,255,255,0.92);font-size:1.05rem}
+.hero h1{font-size:2.1rem;margin-bottom:0.25rem}
+.hero .cta-group{margin-top:1rem}
+.btn-cta{background:linear-gradient(90deg,var(--primary-1),var(--primary-2));border:none;color:white;padding:0.6rem 1.1rem}
+.btn-cta:hover{filter:brightness(0.95)}
+
+/* Content sections */
+section{padding:1.25rem 0}
+h2{font-size:1.45rem;margin-bottom:0.6rem}
+p{color:var(--muted)}
+
+/* Cards */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem}
+.feature-card{background:#fff;border-radius:8px;padding:1rem;box-shadow:0 6px 18px rgba(15,23,42,0.06);transition:transform .18s ease,box-shadow .18s ease}
+.feature-card:hover{transform:translateY(-6px);box-shadow:0 10px 30px rgba(15,23,42,0.08)}
+.feature-card h5{margin-bottom:0.5rem}
+.feature-card p{margin:0;color:var(--muted)}
+
+/* Table / projections */
+.projections table{width:100%;border-collapse:collapse}
+.projections th,.projections td{padding:0.5rem 0.75rem;border-bottom:1px solid #eef2f7;text-align:left}
+.muted-small{color:var(--muted);font-size:0.9rem}
+
+/* Footer */
+footer small{color:var(--muted)}
+
+/* Responsive tweaks */
+@media (max-width:768px){
+	.hero{padding-top:2rem;padding-bottom:2rem}
+	.hero h1{font-size:1.6rem}
+}
