@@ -1,0 +1,51 @@
+# ========================================
+# COPIE TUDO ABAIXO E COLE NO COOLIFY
+# ========================================
+
+# DATABASE - SUPABASE (JÁ CONFIGURADO)
+DATABASE_URL=postgresql://postgres.xnazrsweosmopqwsrtvp:7JHX6t.i_ipT%23Qp@aws-1-us-east-2.pooler.supabase.com:6543/postgres?pgbouncer=true&sslmode=require
+DIRECT_URL=postgresql://postgres.xnazrsweosmopqwsrtvp:7JHX6t.i_ipT%23Qp@aws-1-us-east-2.pooler.supabase.com:5432/postgres?sslmode=require
+
+# REDIS (CONTAINER LOCAL)
+REDIS_HOST=redis
+REDIS_PORT=6379
+REDIS_PASSWORD=Coolify@Redis2025Secure!
+
+# JWT (SECRETS GERADOS)
+JWT_SECRET=ib2Q2P+pN2JBTDJykvxBY3xi3m30pN79MxuFOq6a7DjCy7yg
+JWT_REFRESH_SECRET=yRvDgVDd66EH1fsneaF08r+a2w5wv0Cw1WnCAGqE0ZO+31WD
+JWT_ACCESS_TTL=15m
+JWT_REFRESH_TTL=7d
+
+# WHATSAPP - EVOLUTION API
+EVOLUTION_API_URL=https://dev.evo.sistemabrasil.online
+EVOLUTION_API_KEY=9B6P43RdEvTqlS6gEKHJY08LGEOSNIDp
+
+# APLICAÇÃO
+PORT=3001
+NODE_ENV=production
+
+# URLS (AJUSTE SE NECESSÁRIO)
+FRONTEND_URL=https://dcsgog88ccgsoc40848ocg0w.projetojm.org
+NEXT_PUBLIC_API_URL=https://dcsgog88ccgsoc40848ocg0w.projetojm.org/api
+
+# SEGURANÇA
+ALLOWED_ORIGINS=https://dcsgog88ccgsoc40848ocg0w.projetojm.org
+RATE_LIMIT_WINDOW_MS=60000
+RATE_LIMIT_MAX_REQUESTS=100
+STRICT_RATE_LIMIT_WINDOW_MS=60000
+STRICT_RATE_LIMIT_MAX_REQUESTS=5
+
+# ENCRYPTION
+ENCRYPTION_KEY=T+FR514EIfag68U6Doim7xFOLDr96Tfo
+SESSION_SECRET=scUaECwvqOA8C0YNDS2SlwxvMZr1DtTPuuvGjWDswQ/hP+ZU
+
+# PAGAMENTOS - STRIPE (OPCIONAL - Configure depois se usar)
+STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
+STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key
+STRIPE_WEBHOOK_SECRET=whsec_your_stripe_webhook_secret
+
+# PAGAMENTOS - MERCADOPAGO (OPCIONAL - Configure depois se usar)
+MERCADOPAGO_ACCESS_TOKEN=your_mercadopago_access_token
+MERCADOPAGO_PUBLIC_KEY=your_mercadopago_public_key
+MERCADOPAGO_BACK_URL=https://dcsgog88ccgsoc40848ocg0w.projetojm.org/payment/callback
