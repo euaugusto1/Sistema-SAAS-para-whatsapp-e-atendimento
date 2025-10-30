@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../lib/auth';
-import apiClient from '../lib/apiClient';
-import LoadingSpinner from '../components/LoadingSpinner';
-import ErrorMessage from '../components/ErrorMessage';
+import { useAuth } from '../lib/auth/auth-context';
+import { apiClient } from '../lib/api/client';
+import { LoadingSpinner, ErrorMessage } from '../components/LoadingSpinner';
 
 interface Subscription {
   id: string;
@@ -113,7 +112,7 @@ export default function SubscriptionPage() {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Minha Assinatura</h1>
 
-      {error && <ErrorMessage message={error} onClose={() => setError('')} />}
+      {error && <ErrorMessage message={error} onRetry={() => setError('')} />}
 
       {/* Active Subscriptions */}
       <div className="mb-8">

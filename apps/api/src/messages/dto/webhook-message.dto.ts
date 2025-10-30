@@ -15,6 +15,9 @@ export class WebhookMessageDto {
   @IsString()
   messageId: string;
 
+  @IsString()
+  phone: string;
+
   @IsEnum(MessageStatus)
   status: MessageStatus;
 

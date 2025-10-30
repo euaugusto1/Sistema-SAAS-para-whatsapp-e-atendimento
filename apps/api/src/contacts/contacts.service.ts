@@ -47,17 +47,45 @@ export class ContactsService {
     });
   }
 
-  async findAll(organizationId: string, page = 1, limit = 50) {
+  async findAll(
+    organizationId: string,
+    page = 1,
+    limit = 50,
+    filters?: {
+      q?: string;
+      status?: 'active' | 'blocked';
+      tag?: string;
+      listId?: string;
+      noname?: boolean;
+    },
+  ) {
     const skip = (page - 1) * limit;
+
+    const where: any = { organizationId };
+    if (filters?.q) {
+      where.OR = [
+        { name: { contains: filters.q, mode: 'insensitive' } },
+        { phone: { contains: filters.q } },
+        { email: { contains: filters.q, mode: 'insensitive' } },
+      ];
+    }
+    if (filters?.status === 'blocked') where.isBlocked = true;
+    if (filters?.status === 'active') where.isBlocked = false;
+    if (filters?.tag) where.tags = { has: filters.tag };
+    if (filters?.noname) where.OR = [{ name: null }, { name: '' }];
+    if (filters?.listId) {
+      where.listMemberships = { some: { listId: filters.listId } };
+    }
 
     const [contacts, total] = await Promise.all([
       this.prisma.contact.findMany({
-        where: { organizationId },
+        where,
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
         include: {
-          lists: {
+          // Relation name in schema is `listMemberships`, not `lists`
+          listMemberships: {
             include: {
               list: {
                 select: {
@@ -69,12 +97,11 @@ export class ContactsService {
           },
         },
       }),
-      this.prisma.contact.count({
-        where: { organizationId },
-      }),
+      this.prisma.contact.count({ where }),
     ]);
 
     return {
+      // Keep original key for backward compatibility; frontend handles both
       contacts,
       pagination: {
         total,
@@ -92,7 +119,7 @@ export class ContactsService {
         organizationId,
       },
       include: {
-        lists: {
+        listMemberships: {
           include: {
             list: true,
           },
@@ -134,6 +161,8 @@ export class ContactsService {
         ...(dto.email && { email: dto.email.toLowerCase() }),
         ...(dto.company !== undefined && { company: dto.company }),
         ...(dto.customFields !== undefined && { customFields: dto.customFields }),
+        ...(dto.tags !== undefined && { tags: dto.tags }),
+        ...(dto.isBlocked !== undefined && { isBlocked: dto.isBlocked }),
       },
     });
   }
@@ -261,5 +290,55 @@ export class ContactsService {
   private normalizePhone(phone: string): string {
     // Remove all non-digit characters
     return phone.replace(/\D/g, '');
+  }
+
+  // Extra operations
+  async updateTags(organizationId: string, id: string, tags: string[]) {
+    await this.findOne(organizationId, id);
+    return this.prisma.contact.update({ where: { id }, data: { tags } });
+  }
+
+  async setBlocked(organizationId: string, id: string, isBlocked: boolean) {
+    await this.findOne(organizationId, id);
+    return this.prisma.contact.update({ where: { id }, data: { isBlocked } });
+  }
+
+  async addToList(
+    organizationId: string,
+    contactId: string,
+    payload: { listId?: string; listName?: string },
+  ) {
+    await this.findOne(organizationId, contactId);
+
+    let listId = payload.listId;
+    if (!listId && payload.listName) {
+      let list = await this.prisma.contactList.findFirst({
+        where: { organizationId, name: payload.listName },
+      });
+      if (!list) {
+        list = await this.prisma.contactList.create({
+          data: { organizationId, name: payload.listName },
+        });
+      }
+      listId = list.id;
+    }
+    if (!listId) throw new BadRequestException('listId ou listName é obrigatório');
+
+    // Create membership if not exists
+    await this.prisma.contactListMember.upsert({
+      where: { listId_contactId: { listId, contactId } },
+      update: {},
+      create: { listId, contactId },
+    });
+
+    return { success: true };
+  }
+
+  async removeFromList(organizationId: string, contactId: string, listId: string) {
+    await this.findOne(organizationId, contactId);
+    await this.prisma.contactListMember.delete({
+      where: { listId_contactId: { listId, contactId } },
+    });
+    return { success: true };
   }
 }

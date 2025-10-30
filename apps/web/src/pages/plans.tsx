@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../lib/auth';
-import apiClient from '../lib/apiClient';
+import { useAuth } from '../lib/auth/hooks';
+import apiClient from '../lib/api/client';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorMessage from '../components/ErrorMessage';
 

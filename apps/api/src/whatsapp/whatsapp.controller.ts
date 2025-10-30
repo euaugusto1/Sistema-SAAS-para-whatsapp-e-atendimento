@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Logger,
 } from '@nestjs/common';
 import { WhatsappService } from './whatsapp.service';
 import { CreateWhatsappInstanceDto } from './dto/create-instance.dto';
@@ -23,15 +24,19 @@ interface RequestUser {
 @Controller('whatsapp/instances')
 @UseGuards(JwtAuthGuard, OrganizationGuard)
 export class WhatsappController {
+  private readonly logger = new Logger(WhatsappController.name);
+  
   constructor(private readonly whatsappService: WhatsappService) {}
 
   @Post()
   create(@CurrentUser() user: RequestUser, @Body() createDto: CreateWhatsappInstanceDto) {
+    this.logger.log(`Creating instance for organization ${user.organizationId}: ${createDto.name}`);
     return this.whatsappService.create(user.organizationId, createDto);
   }
 
   @Get()
   findAll(@CurrentUser() user: RequestUser) {
+    this.logger.log(`Finding all instances for organization ${user.organizationId}`);
     return this.whatsappService.findAll(user.organizationId);
   }
 

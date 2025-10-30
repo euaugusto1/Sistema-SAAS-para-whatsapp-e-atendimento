@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { apiClient } from '../lib/api/client';
-import { useAuth } from '../lib/auth/hooks';
-import { LoadingSpinner } from '../components/LoadingSpinner';
-import { ErrorMessage } from '../components/ErrorMessage';
+import { useAuth } from '../lib/auth/auth-context';
+import { LoadingSpinner, ErrorMessage } from '../components/LoadingSpinner';
+import Layout from '../components/Layout';
 
 export default function CampaignsPage() {
   const { user } = useAuth();
@@ -51,7 +51,7 @@ export default function CampaignsPage() {
       const response = await apiClient.get(`/whatsapp/instances?organizationId=${organizationId}`);
       setInstances(response.data || []);
     } catch (err) {
-      console.error('Erro ao carregar instâncias:', err);
+      console.error('Erro ao carregar instÃ¢ncias:', err);
     }
   };
 
@@ -138,7 +138,7 @@ export default function CampaignsPage() {
       setStats(response.data);
       setStatsModal(id);
     } catch (err) {
-      setError(err.response?.data?.message || 'Erro ao carregar estatísticas');
+      setError(err.response?.data?.message || 'Erro ao carregar estatÃ­sticas');
     }
   };
 
@@ -165,320 +165,789 @@ export default function CampaignsPage() {
     });
   };
 
-  const getStatusBadge = (status) => {
-    const badges = {
-      DRAFT: 'badge bg-secondary',
-      SCHEDULED: 'badge bg-info',
-      RUNNING: 'badge bg-primary',
-      PAUSED: 'badge bg-warning',
-      COMPLETED: 'badge bg-success',
-      FAILED: 'badge bg-danger',
+  const getStatusLabel = (status) => {
+    const labels = {
+      DRAFT: 'Rascunho',
+      SCHEDULED: 'Agendada',
+      RUNNING: 'Executando',
+      PAUSED: 'Pausada',
+      COMPLETED: 'ConcluÃ­da',
+      FAILED: 'Falhou',
     };
-    return badges[status] || 'badge bg-secondary';
+    return labels[status] || status;
   };
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return (
+    <Layout title="Campanhas">
+      <LoadingSpinner />
+    </Layout>
+  );
 
   return (
-    <div className="container mt-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>Campanhas de WhatsApp</h2>
-        <button
-          className="btn btn-primary"
-          onClick={() => {
-            resetForm();
-            setShowModal(true);
-          }}
-        >
-          <i className="bi bi-plus-lg"></i> Nova Campanha
-        </button>
-      </div>
+    <Layout title="Campanhas">
+      <div className="campaigns-container">
+        <div className="campaigns-header">
+          <div className="header-content">
+            <div>
+              <h1 className="page-title">Campanhas de WhatsApp</h1>
+              <p className="page-subtitle">Gerencie e monitore suas campanhas de disparo em massa</p>
+            </div>
+            <button
+              className="btn-primary"
+              onClick={() => {
+                resetForm();
+                setShowModal(true);
+              }}
+            >
+              <span className="btn-icon">ðŸ“¢</span>
+              <span>Nova Campanha</span>
+            </button>
+          </div>
+        </div>
 
-      {error && <ErrorMessage message={error} onClose={() => setError('')} />}
+        {error && <ErrorMessage message={error} onRetry={() => setError('')} />}
 
-      <div className="card">
-        <div className="card-body">
-          <div className="table-responsive">
-            <table className="table table-hover">
-              <thead>
-                <tr>
-                  <th>Nome</th>
-                  <th>Instância</th>
-                  <th>Destinatários</th>
-                  <th>Status</th>
-                  <th>Agendado para</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {campaigns.length === 0 ? (
+        <div className="campaigns-content">
+          <div className="section-card">
+            <div className="table-responsive">
+              <table className="campaigns-table">
+                <thead>
                   <tr>
-                    <td colSpan={6} className="text-center text-muted">
-                      Nenhuma campanha encontrada
-                    </td>
+                    <th>Nome</th>
+                    <th>InstÃ¢ncia</th>
+                    <th>DestinatÃ¡rios</th>
+                    <th>Status</th>
+                    <th>Agendado para</th>
+                    <th>AÃ§Ãµes</th>
                   </tr>
-                ) : (
-                  campaigns.map((campaign) => (
-                    <tr key={campaign.id}>
-                      <td>{campaign.name}</td>
-                      <td>{campaign.instance?.name || 'N/A'}</td>
-                      <td>{campaign._count?.recipients || 0}</td>
-                      <td>
-                        <span className={getStatusBadge(campaign.status)}>
-                          {campaign.status}
-                        </span>
-                      </td>
-                      <td>
-                        {campaign.scheduledAt
-                          ? new Date(campaign.scheduledAt).toLocaleString()
-                          : 'Imediato'}
-                      </td>
-                      <td>
-                        <div className="btn-group btn-group-sm">
-                          {campaign.status === 'DRAFT' && (
-                            <>
-                              <button
-                                className="btn btn-outline-primary"
-                                onClick={() => handleEdit(campaign)}
-                                title="Editar"
-                              >
-                                <i className="bi bi-pencil"></i>
-                              </button>
-                              <button
-                                className="btn btn-outline-success"
-                                onClick={() => handleStartCampaign(campaign.id)}
-                                title="Iniciar"
-                              >
-                                <i className="bi bi-play-fill"></i>
-                              </button>
-                            </>
-                          )}
-                          {campaign.status === 'RUNNING' && (
-                            <button
-                              className="btn btn-outline-warning"
-                              onClick={() => handlePauseCampaign(campaign.id)}
-                              title="Pausar"
-                            >
-                              <i className="bi bi-pause-fill"></i>
-                            </button>
-                          )}
-                          {campaign.status === 'PAUSED' && (
-                            <button
-                              className="btn btn-outline-success"
-                              onClick={() => handleResumeCampaign(campaign.id)}
-                              title="Retomar"
-                            >
-                              <i className="bi bi-play-fill"></i>
-                            </button>
-                          )}
-                          {['RUNNING', 'COMPLETED', 'FAILED'].includes(campaign.status) && (
-                            <button
-                              className="btn btn-outline-info"
-                              onClick={() => handleShowStats(campaign.id)}
-                              title="Estatísticas"
-                            >
-                              <i className="bi bi-graph-up"></i>
-                            </button>
-                          )}
-                          {['DRAFT', 'COMPLETED', 'FAILED'].includes(campaign.status) && (
-                            <button
-                              className="btn btn-outline-danger"
-                              onClick={() => handleDeleteCampaign(campaign.id)}
-                              title="Excluir"
-                            >
-                              <i className="bi bi-trash"></i>
-                            </button>
-                          )}
+                </thead>
+                <tbody>
+                  {campaigns.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="empty-state">
+                        <div className="empty-content">
+                          <div className="empty-icon">ðŸ“¢</div>
+                          <p className="empty-message">Nenhuma campanha encontrada</p>
+                          <button 
+                            className="btn-primary"
+                            onClick={() => {
+                              resetForm();
+                              setShowModal(true);
+                            }}
+                          >
+                            Criar primeira campanha
+                          </button>
                         </div>
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    campaigns.map((campaign) => (
+                      <tr key={campaign.id} className="campaign-row">
+                        <td className="campaign-name">{campaign.name}</td>
+                        <td className="campaign-instance">{campaign.instance?.name || 'N/A'}</td>
+                        <td className="campaign-recipients">{campaign._count?.recipients || 0}</td>
+                        <td className="campaign-status">
+                          <span className={`status-badge status-${campaign.status.toLowerCase()}`}>
+                            {getStatusLabel(campaign.status)}
+                          </span>
+                        </td>
+                        <td className="campaign-scheduled">
+                          {campaign.scheduledAt
+                            ? new Date(campaign.scheduledAt).toLocaleString('pt-BR')
+                            : 'Imediato'}
+                        </td>
+                        <td className="campaign-actions">
+                          <div className="action-buttons">
+                            {campaign.status === 'DRAFT' && (
+                              <>
+                                <button
+                                  className="action-btn action-edit"
+                                  onClick={() => handleEdit(campaign)}
+                                  title="Editar"
+                                >
+                                  âœï¸
+                                </button>
+                                <button
+                                  className="action-btn action-start"
+                                  onClick={() => handleStartCampaign(campaign.id)}
+                                  title="Iniciar"
+                                >
+                                  â–¶ï¸
+                                </button>
+                              </>
+                            )}
+                            {campaign.status === 'RUNNING' && (
+                              <button
+                                className="action-btn action-pause"
+                                onClick={() => handlePauseCampaign(campaign.id)}
+                                title="Pausar"
+                              >
+                                â¸ï¸
+                              </button>
+                            )}
+                            {campaign.status === 'PAUSED' && (
+                              <button
+                                className="action-btn action-resume"
+                                onClick={() => handleResumeCampaign(campaign.id)}
+                                title="Retomar"
+                              >
+                                â–¶ï¸
+                              </button>
+                            )}
+                            {['RUNNING', 'COMPLETED', 'FAILED'].includes(campaign.status) && (
+                              <button
+                                className="action-btn action-stats"
+                                onClick={() => handleShowStats(campaign.id)}
+                                title="EstatÃ­sticas"
+                              >
+                                ðŸ“Š
+                              </button>
+                            )}
+                            {['DRAFT', 'COMPLETED', 'FAILED'].includes(campaign.status) && (
+                              <button
+                                className="action-btn action-delete"
+                                onClick={() => handleDeleteCampaign(campaign.id)}
+                                title="Excluir"
+                              >
+                                ðŸ—‘ï¸
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* Modais */}
+        {showModal && (
+          <CampaignModal
+            selectedCampaign={selectedCampaign}
+            formData={formData}
+            setFormData={setFormData}
+            instances={instances}
+            contacts={contacts}
+            error={error}
+            onSubmit={handleSubmit}
+            onClose={() => {
+              setShowModal(false);
+              resetForm();
+            }}
+          />
+        )}
+
+        {statsModal && stats && (
+          <StatsModal
+            stats={stats}
+            onClose={() => {
+              setStatsModal(null);
+              setStats(null);
+            }}
+          />
+        )}
+      </div>
+
+      <style jsx>{`
+        .campaigns-container {
+          width: 100%;
+        }
+
+        .campaigns-header {
+          margin-bottom: 2rem;
+        }
+
+        .header-content {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(10px);
+          border-radius: 20px;
+          padding: 2rem;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .page-title {
+          font-size: 2.5rem;
+          font-weight: 700;
+          color: white;
+          margin: 0;
+          background: linear-gradient(45deg, #fff, #f0f8ff);
+          background-clip: text;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .page-subtitle {
+          color: rgba(255, 255, 255, 0.8);
+          margin: 0.5rem 0 0 0;
+          font-size: 1.1rem;
+        }
+
+        .btn-primary {
+          padding: 0.75rem 1.5rem;
+          border-radius: 12px;
+          border: none;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          background: linear-gradient(45deg, #4CAF50, #45a049);
+          color: white;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .btn-primary:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-icon {
+          font-size: 1.2rem;
+        }
+
+        .campaigns-content {
+          width: 100%;
+        }
+
+        .section-card {
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(10px);
+          border-radius: 20px;
+          padding: 2rem;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          overflow: hidden;
+        }
+
+        .table-responsive {
+          overflow-x: auto;
+        }
+
+        .campaigns-table {
+          width: 100%;
+          border-collapse: collapse;
+          background: white;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .campaigns-table th {
+          background: linear-gradient(45deg, #667eea, #764ba2);
+          color: white;
+          padding: 1rem;
+          text-align: left;
+          font-weight: 600;
+          border: none;
+        }
+
+        .campaigns-table td {
+          padding: 1rem;
+          border-bottom: 1px solid #f0f0f0;
+          vertical-align: middle;
+        }
+
+        .campaign-row:hover {
+          background: rgba(102, 126, 234, 0.05);
+        }
+
+        .campaign-name {
+          font-weight: 600;
+          color: #333;
+        }
+
+        .campaign-instance {
+          color: #666;
+        }
+
+        .campaign-recipients {
+          font-weight: 600;
+          color: #2196F3;
+        }
+
+        .status-badge {
+          padding: 0.5rem 1rem;
+          border-radius: 20px;
+          font-size: 0.85rem;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .status-draft {
+          background: rgba(158, 158, 158, 0.2);
+          color: #666;
+        }
+
+        .status-scheduled {
+          background: rgba(33, 150, 243, 0.2);
+          color: #2196F3;
+        }
+
+        .status-running {
+          background: rgba(102, 126, 234, 0.2);
+          color: #667eea;
+        }
+
+        .status-paused {
+          background: rgba(255, 152, 0, 0.2);
+          color: #ff9800;
+        }
+
+        .status-completed {
+          background: rgba(76, 175, 80, 0.2);
+          color: #4CAF50;
+        }
+
+        .status-failed {
+          background: rgba(244, 67, 54, 0.2);
+          color: #f44336;
+        }
+
+        .campaign-scheduled {
+          color: #666;
+          font-size: 0.9rem;
+        }
+
+        .action-buttons {
+          display: flex;
+          gap: 0.5rem;
+          align-items: center;
+        }
+
+        .action-btn {
+          width: 36px;
+          height: 36px;
+          border-radius: 8px;
+          border: none;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1rem;
+        }
+
+        .action-edit {
+          background: rgba(33, 150, 243, 0.1);
+          color: #2196F3;
+        }
+
+        .action-edit:hover {
+          background: rgba(33, 150, 243, 0.2);
+          transform: scale(1.1);
+        }
+
+        .action-start, .action-resume {
+          background: rgba(76, 175, 80, 0.1);
+          color: #4CAF50;
+        }
+
+        .action-start:hover, .action-resume:hover {
+          background: rgba(76, 175, 80, 0.2);
+          transform: scale(1.1);
+        }
+
+        .action-pause {
+          background: rgba(255, 152, 0, 0.1);
+          color: #ff9800;
+        }
+
+        .action-pause:hover {
+          background: rgba(255, 152, 0, 0.2);
+          transform: scale(1.1);
+        }
+
+        .action-stats {
+          background: rgba(102, 126, 234, 0.1);
+          color: #667eea;
+        }
+
+        .action-stats:hover {
+          background: rgba(102, 126, 234, 0.2);
+          transform: scale(1.1);
+        }
+
+        .action-delete {
+          background: rgba(244, 67, 54, 0.1);
+          color: #f44336;
+        }
+
+        .action-delete:hover {
+          background: rgba(244, 67, 54, 0.2);
+          transform: scale(1.1);
+        }
+
+        .empty-state {
+          text-align: center;
+          padding: 4rem 2rem;
+        }
+
+        .empty-content {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        .empty-icon {
+          font-size: 4rem;
+          opacity: 0.5;
+        }
+
+        .empty-message {
+          color: #666;
+          font-size: 1.1rem;
+          margin: 0;
+        }
+
+        @media (max-width: 768px) {
+          .header-content {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+          }
+
+          .page-title {
+            font-size: 2rem;
+          }
+
+          .campaigns-table {
+            font-size: 0.9rem;
+          }
+
+          .action-buttons {
+            flex-wrap: wrap;
+          }
+        }
+      `}</style>
+    </Layout>
+  );
+}
+
+// Componente do Modal de Campanha (simplificado)
+function CampaignModal({ selectedCampaign, formData, setFormData, instances, contacts, error, onSubmit, onClose }) {
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'rgba(0, 0, 0, 0.7)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000,
+      padding: '2rem'
+    }}>
+      <div style={{
+        background: 'white',
+        borderRadius: '20px',
+        maxWidth: '600px',
+        width: '100%',
+        maxHeight: '90vh',
+        overflowY: 'auto',
+        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '2rem 2rem 1rem',
+          borderBottom: '1px solid #f0f0f0'
+        }}>
+          <h3 style={{ margin: 0, color: '#333', fontSize: '1.5rem', fontWeight: 700 }}>
+            {selectedCampaign ? 'Editar Campanha' : 'Nova Campanha'}
+          </h3>
+          <button 
+            onClick={onClose}
+            style={{
+              background: 'none',
+              border: 'none',
+              fontSize: '2rem',
+              color: '#999',
+              cursor: 'pointer'
+            }}
+          >
+            Ã—
+          </button>
+        </div>
+        
+        <form onSubmit={onSubmit}>
+          <div style={{ padding: '2rem' }}>
+            {error && (
+              <div style={{
+                background: 'rgba(244, 67, 54, 0.1)',
+                color: '#f44336',
+                padding: '1rem',
+                borderRadius: '8px',
+                marginBottom: '1.5rem',
+                border: '1px solid rgba(244, 67, 54, 0.2)'
+              }}>
+                {error}
+              </div>
+            )}
+            
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#333' }}>
+                Nome da Campanha *
+              </label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                required
+                placeholder="Ex: PromoÃ§Ã£o Black Friday"
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '2px solid #e0e0e0',
+                  borderRadius: '8px',
+                  fontSize: '1rem'
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#333' }}>
+                InstÃ¢ncia WhatsApp *
+              </label>
+              <select
+                value={formData.instanceId}
+                onChange={(e) => setFormData({ ...formData, instanceId: e.target.value })}
+                required
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '2px solid #e0e0e0',
+                  borderRadius: '8px',
+                  fontSize: '1rem'
+                }}
+              >
+                <option value="">Selecione uma instÃ¢ncia</option>
+                {instances
+                  .filter((i) => i.status === 'CONNECTED')
+                  .map((instance) => (
+                    <option key={instance.id} value={instance.id}>
+                      {instance.name} ({instance.phoneNumber})
+                    </option>
+                  ))}
+              </select>
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#333' }}>
+                Mensagem *
+              </label>
+              <textarea
+                rows={5}
+                value={formData.message}
+                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                required
+                placeholder="Digite sua mensagem aqui. Use {name} para inserir o nome do contato"
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '2px solid #e0e0e0',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  resize: 'vertical'
+                }}
+              />
+            </div>
+          </div>
+          
+          <div style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: '1rem',
+            padding: '1rem 2rem 2rem',
+            borderTop: '1px solid #f0f0f0'
+          }}>
+            <button 
+              type="button" 
+              onClick={onClose}
+              style={{
+                padding: '0.75rem 1.5rem',
+                border: '2px solid #e0e0e0',
+                background: 'white',
+                color: '#666',
+                borderRadius: '8px',
+                fontWeight: 600,
+                cursor: 'pointer'
+              }}
+            >
+              Cancelar
+            </button>
+            <button 
+              type="submit"
+              style={{
+                padding: '0.75rem 1.5rem',
+                background: 'linear-gradient(45deg, #667eea, #764ba2)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: 600,
+                cursor: 'pointer'
+              }}
+            >
+              {selectedCampaign ? 'Salvar' : 'Criar'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// Componente do Modal de EstatÃ­sticas (simplificado)
+function StatsModal({ stats, onClose }) {
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'rgba(0, 0, 0, 0.7)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000,
+      padding: '2rem'
+    }}>
+      <div style={{
+        background: 'white',
+        borderRadius: '20px',
+        maxWidth: '500px',
+        width: '100%',
+        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '2rem 2rem 1rem',
+          borderBottom: '1px solid #f0f0f0'
+        }}>
+          <h3 style={{ margin: 0, color: '#333', fontSize: '1.5rem', fontWeight: 700 }}>
+            EstatÃ­sticas da Campanha
+          </h3>
+          <button 
+            onClick={onClose}
+            style={{
+              background: 'none',
+              border: 'none',
+              fontSize: '2rem',
+              color: '#999',
+              cursor: 'pointer'
+            }}
+          >
+            Ã—
+          </button>
+        </div>
+        
+        <div style={{ padding: '2rem' }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))',
+            gap: '1rem',
+            marginBottom: '2rem'
+          }}>
+            <div style={{
+              textAlign: 'center',
+              padding: '1.5rem 1rem',
+              background: 'rgba(158, 158, 158, 0.1)',
+              borderRadius: '12px',
+              border: '2px solid rgba(158, 158, 158, 0.2)'
+            }}>
+              <div style={{ fontSize: '2rem', fontWeight: 700, color: '#333', marginBottom: '0.5rem' }}>
+                {stats.total}
+              </div>
+              <div style={{ fontSize: '0.9rem', color: '#666', fontWeight: 600 }}>Total</div>
+            </div>
+            <div style={{
+              textAlign: 'center',
+              padding: '1.5rem 1rem',
+              background: 'rgba(76, 175, 80, 0.1)',
+              borderRadius: '12px',
+              border: '2px solid rgba(76, 175, 80, 0.2)'
+            }}>
+              <div style={{ fontSize: '2rem', fontWeight: 700, color: '#333', marginBottom: '0.5rem' }}>
+                {stats.sent}
+              </div>
+              <div style={{ fontSize: '0.9rem', color: '#666', fontWeight: 600 }}>Enviados</div>
+            </div>
+            <div style={{
+              textAlign: 'center',
+              padding: '1.5rem 1rem',
+              background: 'rgba(33, 150, 243, 0.1)',
+              borderRadius: '12px',
+              border: '2px solid rgba(33, 150, 243, 0.2)'
+            }}>
+              <div style={{ fontSize: '2rem', fontWeight: 700, color: '#333', marginBottom: '0.5rem' }}>
+                {stats.delivered}
+              </div>
+              <div style={{ fontSize: '0.9rem', color: '#666', fontWeight: 600 }}>Entregues</div>
+            </div>
+            <div style={{
+              textAlign: 'center',
+              padding: '1.5rem 1rem',
+              background: 'rgba(244, 67, 54, 0.1)',
+              borderRadius: '12px',
+              border: '2px solid rgba(244, 67, 54, 0.2)'
+            }}>
+              <div style={{ fontSize: '2rem', fontWeight: 700, color: '#333', marginBottom: '0.5rem' }}>
+                {stats.failed}
+              </div>
+              <div style={{ fontSize: '0.9rem', color: '#666', fontWeight: 600 }}>Falhas</div>
+            </div>
+            <div style={{
+              textAlign: 'center',
+              padding: '1.5rem 1rem',
+              background: 'rgba(255, 152, 0, 0.1)',
+              borderRadius: '12px',
+              border: '2px solid rgba(255, 152, 0, 0.2)'
+            }}>
+              <div style={{ fontSize: '2rem', fontWeight: 700, color: '#333', marginBottom: '0.5rem' }}>
+                {stats.pending}
+              </div>
+              <div style={{ fontSize: '0.9rem', color: '#666', fontWeight: 600 }}>Pendentes</div>
+            </div>
+          </div>
+          
+          <div style={{ marginTop: '2rem' }}>
+            <div style={{
+              fontWeight: 600,
+              color: '#333',
+              marginBottom: '1rem',
+              textAlign: 'center'
+            }}>
+              Progresso: {stats.progress}%
+            </div>
+            <div style={{
+              width: '100%',
+              height: '12px',
+              background: '#f0f0f0',
+              borderRadius: '6px',
+              overflow: 'hidden'
+            }}>
+              <div style={{
+                height: '100%',
+                background: 'linear-gradient(45deg, #667eea, #764ba2)',
+                width: `${stats.progress}%`,
+                transition: 'width 0.3s ease'
+              }} />
+            </div>
           </div>
         </div>
       </div>
-
-      {/* Modal de Criação/Edição */}
-      {showModal && (
-        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-lg">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
-                  {selectedCampaign ? 'Editar Campanha' : 'Nova Campanha'}
-                </h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => {
-                    setShowModal(false);
-                    resetForm();
-                  }}
-                ></button>
-              </div>
-              <form onSubmit={handleSubmit}>
-                <div className="modal-body">
-                  <div className="mb-3">
-                    <label className="form-label">Nome da Campanha *</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label">Instância WhatsApp *</label>
-                    <select
-                      className="form-select"
-                      value={formData.instanceId}
-                      onChange={(e) => setFormData({ ...formData, instanceId: e.target.value })}
-                      required
-                    >
-                      <option value="">Selecione uma instância</option>
-                      {instances
-                        .filter((i) => i.status === 'CONNECTED')
-                        .map((instance) => (
-                          <option key={instance.id} value={instance.id}>
-                            {instance.name} ({instance.phoneNumber})
-                          </option>
-                        ))}
-                    </select>
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label">Mensagem *</label>
-                    <textarea
-                      className="form-control"
-                      rows={5}
-                      value={formData.message}
-                      onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                      required
-                      placeholder="Use {name} para inserir o nome do contato"
-                    ></textarea>
-                    <small className="text-muted">
-                      Variáveis disponíveis: {'{name}'}, {'{phone}'}
-                    </small>
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label">Destinatários *</label>
-                    <select
-                      multiple
-                      className="form-select"
-                      style={{ height: '200px' }}
-                      value={formData.contactIds}
-                      onChange={(e) => {
-                        const selected = Array.from(e.target.selectedOptions, (option) => option.value);
-                        setFormData({ ...formData, contactIds: selected });
-                      }}
-                      required
-                    >
-                      {contacts.map((contact) => (
-                        <option key={contact.id} value={contact.id}>
-                          {contact.name} - {contact.phoneNumber}
-                        </option>
-                      ))}
-                    </select>
-                    <small className="text-muted">
-                      Segure Ctrl/Cmd para selecionar múltiplos. Selecionados: {formData.contactIds.length}
-                    </small>
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label">Agendar para (opcional)</label>
-                    <input
-                      type="datetime-local"
-                      className="form-control"
-                      value={formData.scheduledAt}
-                      onChange={(e) => setFormData({ ...formData, scheduledAt: e.target.value })}
-                    />
-                    <small className="text-muted">
-                      Deixe em branco para enviar imediatamente após iniciar
-                    </small>
-                  </div>
-                </div>
-                <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={() => {
-                      setShowModal(false);
-                      resetForm();
-                    }}
-                  >
-                    Cancelar
-                  </button>
-                  <button type="submit" className="btn btn-primary">
-                    {selectedCampaign ? 'Salvar' : 'Criar'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de Estatísticas */}
-      {statsModal && stats && (
-        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Estatísticas da Campanha</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => {
-                    setStatsModal(null);
-                    setStats(null);
-                  }}
-                ></button>
-              </div>
-              <div className="modal-body">
-                <div className="row text-center">
-                  <div className="col-md-6 mb-3">
-                    <h4>{stats.total}</h4>
-                    <small className="text-muted">Total</small>
-                  </div>
-                  <div className="col-md-6 mb-3">
-                    <h4 className="text-success">{stats.sent}</h4>
-                    <small className="text-muted">Enviados</small>
-                  </div>
-                  <div className="col-md-6 mb-3">
-                    <h4 className="text-primary">{stats.delivered}</h4>
-                    <small className="text-muted">Entregues</small>
-                  </div>
-                  <div className="col-md-6 mb-3">
-                    <h4 className="text-danger">{stats.failed}</h4>
-                    <small className="text-muted">Falhas</small>
-                  </div>
-                  <div className="col-md-12">
-                    <h4 className="text-warning">{stats.pending}</h4>
-                    <small className="text-muted">Pendentes</small>
-                  </div>
-                </div>
-                <div className="progress mt-3" style={{ height: '30px' }}>
-                  <div
-                    className="progress-bar"
-                    role="progressbar"
-                    style={{ width: `${stats.progress}%` }}
-                    aria-valuenow={stats.progress}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                  >
-                    {stats.progress}%
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

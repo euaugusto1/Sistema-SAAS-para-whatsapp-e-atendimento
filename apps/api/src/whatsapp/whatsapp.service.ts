@@ -1,17 +1,18 @@
 import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  Logger,
+    BadRequestException,
+    Injectable,
+    Logger,
+    NotFoundException,
 } from "@nestjs/common";
+import { InstanceStatus as PrismaInstanceStatus } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateWhatsappInstanceDto } from "./dto/create-instance.dto";
 import { UpdateWhatsappInstanceDto } from "./dto/update-instance.dto";
-import { EvolutionApiProvider } from "./providers/evolution-api.provider";
 import {
-  InstanceStatus,
-  QRCodeData,
+    InstanceStatus,
+    QRCodeData,
 } from "./interfaces/whatsapp-provider.interface";
+import { EvolutionApiProvider } from "./providers/evolution-api.provider";
 
 @Injectable()
 export class WhatsappService {
@@ -23,16 +24,41 @@ export class WhatsappService {
   }
 
   async create(organizationId: string, dto: CreateWhatsappInstanceDto) {
+    this.logger.log(`Creating instance for organization ${organizationId}: ${dto.name}`);
+    
     // Check if instance with same name already exists
-    const existing = await this.prisma.whatsappInstance.findFirst({
+    const existingByName = await this.prisma.whatsappInstance.findFirst({
       where: {
         organizationId,
         name: dto.name,
       },
     });
 
-    if (existing) {
-      throw new BadRequestException("Instância com este nome já existe.");
+    if (existingByName) {
+      throw new BadRequestException("Já existe uma instância com este nome nesta organização.");
+    }
+
+    // Check if phone number is already in use (if provided)
+    if (dto.phoneNumber) {
+      const existingByPhone = await this.prisma.whatsappInstance.findFirst({
+        where: {
+          phoneNumber: dto.phoneNumber,
+        },
+        include: {
+          organization: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      });
+
+      if (existingByPhone) {
+        const orgName = existingByPhone.organization?.name || 'outra organização';
+        throw new BadRequestException(
+          `Este número de telefone (${dto.phoneNumber}) já está cadastrado na instância "${existingByPhone.name}" (${orgName}). Por favor, use um número diferente ou remova a instância existente.`
+        );
+      }
     }
 
     // Create instance in database
@@ -41,9 +67,11 @@ export class WhatsappService {
         organizationId,
         name: dto.name,
         phoneNumber: dto.phoneNumber,
-        status: "DISCONNECTED",
+        status: PrismaInstanceStatus.DISCONNECTED,
       },
     });
+
+    this.logger.log(`✅ Instance created in DB: ${instance.id}`);
 
     // Initialize connection (will generate QR code)
     try {
@@ -52,24 +80,27 @@ export class WhatsappService {
       // Update status
       await this.prisma.whatsappInstance.update({
         where: { id: instance.id },
-        data: { status: "CONNECTING" },
+        data: { status: PrismaInstanceStatus.CONNECTING },
       });
+      
+      this.logger.log(`✅ Instance ${instance.id} status updated to CONNECTING`);
     } catch (error) {
       this.logger.error(`Failed to connect instance ${instance.id}:`, error);
-      await this.prisma.whatsappInstance.update({
-        where: { id: instance.id },
-        data: { status: "ERROR" },
-      });
+      // Não atualiza para ERROR porque não existe no enum, mantém DISCONNECTED
     }
 
     return instance;
   }
 
   async findAll(organizationId: string) {
+    this.logger.log(`Finding all instances for organization: ${organizationId}`);
+    
     const instances = await this.prisma.whatsappInstance.findMany({
       where: { organizationId },
       orderBy: { createdAt: "desc" },
     });
+
+    this.logger.log(`Found ${instances.length} instances`);
 
     // Update statuses from provider
     for (const instance of instances) {
@@ -158,7 +189,9 @@ export class WhatsappService {
   }
 
   async getQRCode(organizationId: string, id: string): Promise<QRCodeData> {
-    await this.findOne(organizationId, id);
+    this.logger.log(`Getting QR code for instance ${id}`);
+    
+    const instance = await this.findOne(organizationId, id);
 
     try {
       const qrCode = await this.provider.getQRCode(id);
@@ -171,9 +204,16 @@ export class WhatsappService {
         data: { status: statusString },
       });
 
+      if (!qrCode) {
+        this.logger.warn(`No QR code available for instance ${id}, status: ${statusString}`);
+      } else {
+        this.logger.log(`✅ QR code retrieved for instance ${id}`);
+      }
+
       return {
         qrCode,
         status,
+        message: qrCode ? 'QR Code gerado com sucesso' : 'Aguardando QR Code. Tente novamente em alguns segundos.',
       };
     } catch (error) {
       this.logger.error(`Failed to get QR code for instance ${id}:`, error);
@@ -189,7 +229,7 @@ export class WhatsappService {
 
       await this.prisma.whatsappInstance.update({
         where: { id },
-        data: { status: "CONNECTING" },
+        data: { status: PrismaInstanceStatus.CONNECTING },
       });
 
       return { message: "Conexão iniciada" };
@@ -207,7 +247,7 @@ export class WhatsappService {
 
       await this.prisma.whatsappInstance.update({
         where: { id },
-        data: { status: "DISCONNECTED" },
+        data: { status: PrismaInstanceStatus.DISCONNECTED },
       });
 
       return { message: "Desconectado com sucesso" };
@@ -217,8 +257,13 @@ export class WhatsappService {
     }
   }
 
-  async sendMessage(instanceId: string, to: string, message: string) {
-    const result = await this.provider.sendMessage(instanceId, to, message);
+  async sendMessage(
+    instanceId: string, 
+    to: string, 
+    message: string,
+    media?: { url: string; type: string; caption?: string; fileName?: string }
+  ) {
+    const result = await this.provider.sendMessage(instanceId, to, message, media);
 
     if (!result.success) {
       throw new BadRequestException(result.error || "Erro ao enviar mensagem");
@@ -227,7 +272,17 @@ export class WhatsappService {
     return result;
   }
 
-  private mapStatusToString(status: InstanceStatus): string {
-    return status.toString();
+  private mapStatusToString(status: InstanceStatus): PrismaInstanceStatus {
+    switch (status) {
+      case InstanceStatus.CONNECTED:
+        return PrismaInstanceStatus.CONNECTED;
+      case InstanceStatus.CONNECTING:
+      case InstanceStatus.QR_CODE:
+        return PrismaInstanceStatus.CONNECTING;
+      case InstanceStatus.DISCONNECTED:
+      case InstanceStatus.ERROR:
+      default:
+        return PrismaInstanceStatus.DISCONNECTED;
+    }
   }
 }

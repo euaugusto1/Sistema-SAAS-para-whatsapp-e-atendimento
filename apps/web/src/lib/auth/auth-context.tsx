@@ -87,7 +87,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('refreshToken');
     setUser(null);
     if (typeof window !== 'undefined') {
-      window.location.href = '/login';
+      // Redireciona para a página inicial do frontend ao sair do painel
+      window.location.href = '/';
     }
   }
 

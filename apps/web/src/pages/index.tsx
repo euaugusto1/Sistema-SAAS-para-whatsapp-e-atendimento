@@ -1,280 +1,526 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Head from "next/head";
 
 export default function Home() {
+  const [animatedNumbers, setAnimatedNumbers] = useState({
+    users: 0,
+    messages: 0,
+    revenue: 0,
+    satisfaction: 0
+  });
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAnimatedNumbers({
+        users: 1000,
+        messages: 250000,
+        revenue: 840000,
+        satisfaction: 98
+      });
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <>
       <Head>
-        <title>Resumo Visual — Transformação em SaaS</title>
+        <title>SaaS WhatsApp Platform — Transforme sua Comunicação</title>
         <meta
           name="description"
-          content="Resumo visual do projeto de transformação em SaaS para disparador WhatsApp."
+          content="Plataforma SaaS completa para disparos WhatsApp com multi-tenancy, analytics avançado e automação. Aumente sua conversão em até 300%."
         />
+        <meta name="keywords" content="WhatsApp, SaaS, Marketing Digital, Automação, Campanhas" />
       </Head>
 
-      <div className="container py-5">
-        <header className="site-nav">
-          <div className="brand">
-            <div className="logo">SV</div>
-            <div>
-              <div style={{ fontWeight: 700 }}>Transformação SaaS</div>
-              <div className="muted-small">Resumo Visual</div>
+      <div className="landing-page">
+        {/* Navigation */}
+        <nav className="navbar">
+          <div className="nav-container">
+            <div className="brand">
+              <div className="logo">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                  <rect width="32" height="32" rx="8" fill="url(#gradient)" />
+                  <path d="M8 12L16 8L24 12V20C24 22.2091 22.2091 24 20 24H12C9.79086 24 8 22.2091 8 20V12Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M16 8V16" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <defs>
+                    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#8B5CF6" />
+                      <stop offset="100%" stopColor="#06B6D4" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </div>
+              <div className="brand-text">
+                <span className="brand-name">WhatsApp SaaS</span>
+                <span className="brand-tagline">Professional Platform</span>
+              </div>
+            </div>
+            <div className="nav-actions">
+              <a className="nav-link" href="#features">Features</a>
+              <a className="nav-link" href="#pricing">Preços</a>
+              <a className="btn btn-ghost" href="/login">Entrar</a>
+              <a className="btn btn-primary" href="/signup">Começar Grátis</a>
             </div>
           </div>
-          <div className="nav-actions">
-            <a className="btn btn-link" href="/login">
-              Entrar
-            </a>
-            <a className="btn btn-outline-primary" href="/signup">
-              Criar conta
-            </a>
-          </div>
-        </header>
+        </nav>
 
-        <div className="hero mt-3">
-          <div className="container">
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 20,
-                flexWrap: "wrap",
-              }}
-            >
-              <div style={{ flex: "1 1 420px" }}>
-                <h1>Transformação em SaaS — Resumo Visual</h1>
-                <p className="lead">
-                  Página que reproduz o resumo visual do projeto com objetivos,
-                  arquitetura, roadmap e métricas.
-                </p>
-                <div className="cta-group">
-                  <a className="btn btn-cta btn-lg" href="/signup">
-                    Começar grátis
-                  </a>
-                  <a
-                    className="btn btn-outline-light btn-lg"
-                    href="/login"
-                    style={{ marginLeft: 12 }}
-                  >
-                    Entrar
-                  </a>
+        {/* Hero Section */}
+        <section className="hero-section">
+          <div className="hero-container">
+            <div className="hero-content">
+              <div className="hero-badge">
+                🚀 Agora com IA Integrada
+              </div>
+              <h1 className="hero-title">
+                Transforme sua Comunicação com 
+                <span className="gradient-text"> WhatsApp Profissional</span>
+              </h1>
+              <p className="hero-subtitle">
+                Plataforma SaaS completa para disparos em massa, automação inteligente e analytics avançado. 
+                Aumente sua conversão em até <strong>300%</strong> com nossa tecnologia de ponta.
+              </p>
+              <div className="hero-actions">
+                <a className="btn btn-hero-primary" href="/signup">
+                  <span>Começar Grátis</span>
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </a>
+                <a className="btn btn-hero-secondary" href="#demo">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                  </svg>
+                  Ver Demo
+                </a>
+              </div>
+              <div className="hero-social-proof">
+                <span className="social-proof-text">Confiado por</span>
+                <div className="social-proof-numbers">
+                  <span className="stat-number">{animatedNumbers.users.toLocaleString()}+</span>
+                  <span className="stat-label">empresas</span>
                 </div>
               </div>
-              <div style={{ width: 220, flex: "0 0 220px" }}>
-                {/* simple visual placeholder */}
-                <div
-                  style={{
-                    background: "#fff",
-                    color: "#0f172a",
-                    padding: 18,
-                    borderRadius: 8,
-                    textAlign: "center",
-                    boxShadow: "0 8px 24px rgba(2,6,23,0.12)",
-                  }}
-                >
-                  <strong>Visão</strong>
-                  <div style={{ marginTop: 8 }} className="muted-small">
-                    SaaS escalável para disparos WhatsApp
+            </div>
+            <div className="hero-visual">
+              <div className="dashboard-mockup">
+                <div className="mockup-header">
+                  <div className="mockup-dots">
+                    <span></span><span></span><span></span>
+                  </div>
+                  <span className="mockup-title">WhatsApp Dashboard</span>
+                </div>
+                <div className="mockup-content">
+                  <div className="stats-grid">
+                    <div className="stat-card">
+                      <div className="stat-icon purple">📱</div>
+                      <div className="stat-info">
+                        <span className="stat-value">{(animatedNumbers.messages / 1000).toFixed(0)}K</span>
+                        <span className="stat-label">Mensagens</span>
+                      </div>
+                    </div>
+                    <div className="stat-card">
+                      <div className="stat-icon blue">💰</div>
+                      <div className="stat-info">
+                        <span className="stat-value">R$ {(animatedNumbers.revenue / 1000).toFixed(0)}K</span>
+                        <span className="stat-label">Receita</span>
+                      </div>
+                    </div>
+                    <div className="stat-card">
+                      <div className="stat-icon green">⭐</div>
+                      <div className="stat-info">
+                        <span className="stat-value">{animatedNumbers.satisfaction}%</span>
+                        <span className="stat-label">Satisfação</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="chart-mockup">
+                    <div className="chart-bars">
+                      <div className="bar" style={{height: '60%'}}></div>
+                      <div className="bar" style={{height: '80%'}}></div>
+                      <div className="bar" style={{height: '45%'}}></div>
+                      <div className="bar" style={{height: '90%'}}></div>
+                      <div className="bar" style={{height: '75%'}}></div>
+                      <div className="bar" style={{height: '95%'}}></div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-
-        <section className="mb-4">
-          <h2>Visão Geral</h2>
-          <pre
-            style={{
-              background: "#f8f9fa",
-              padding: 12,
-              borderRadius: 8,
-              whiteSpace: "pre-wrap",
-            }}
-          >{`SISTEMA ATUAL          →         SISTEMA FUTURO
-
-📄 Monolítico                 🏢 Multi-tenant
-👤 Single user                👥 Multi-user
-🔓 Segurança básica           🔐 Segurança robusta
-📝 Hardcoded                 🎨 Customizável
-💸 Sem monetização           💰 Assinatura`}</pre>
         </section>
 
-        <section className="mb-4">
-          <h2>Objetivo Principal</h2>
-          <p>
-            Criação de uma plataforma SaaS de disparos WhatsApp que permite
-            múltiplas empresas gerenciarem suas próprias campanhas de forma
-            independente, segura e escalável.
-          </p>
-        </section>
-
-        <section className="mb-4">
-          <h2>Projeção Financeira (Cenário Conservador — 12 meses)</h2>
-          <div className="table-responsive">
-            <table className="table table-bordered">
-              <thead className="table-light">
-                <tr>
-                  <th>Mês</th>
-                  <th>Usuários</th>
-                  <th>Preço (R$)</th>
-                  <th>Receita (R$)</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>1-3</td>
-                  <td>50</td>
-                  <td>100</td>
-                  <td>5.000</td>
-                </tr>
-                <tr>
-                  <td>4-6</td>
-                  <td>150</td>
-                  <td>120</td>
-                  <td>18.000</td>
-                </tr>
-                <tr>
-                  <td>7-9</td>
-                  <td>300</td>
-                  <td>130</td>
-                  <td>39.000</td>
-                </tr>
-                <tr>
-                  <td>10-12</td>
-                  <td>500</td>
-                  <td>140</td>
-                  <td>70.000</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <p>
-            <strong>ARR Ano 1:</strong> ~R$ 840.000 —{" "}
-            <strong>Break-even:</strong> Mês 9-10
-          </p>
-        </section>
-
-        <section className="mb-4">
-          <h2>Arquitetura Simplificada</h2>
-          <div style={{ background: "#f8f9fa", padding: 12, borderRadius: 8 }}>
-            <pre
-              style={{ margin: 0, whiteSpace: "pre-wrap" }}
-            >{`FRONTEND: Next.js + Tailwind + Shadcn/ui
-
-REST API / WebSocket
-
-BACKEND: NestJS + Prisma
-
-DB: PostgreSQL
-Queue: Redis
-WhatsApp: Provider API`}</pre>
-          </div>
-        </section>
-
-        <section className="mb-4">
-          <h2>Funcionalidades (MVP)</h2>
-          <div className="cards-grid">
-            <div className="feature-card">
-              <h5>Autenticação</h5>
-              <p>Registro / Login, recuperação de senha e perfil de usuário.</p>
-            </div>
-            <div className="feature-card">
-              <h5>Multi-tenancy</h5>
-              <p>Criar organizações, convidar membros e permissões básicas.</p>
-            </div>
-            <div className="feature-card">
-              <h5>Contatos</h5>
-              <p>CRUD completo, import CSV, segmentação por tags e listas.</p>
-            </div>
-            <div className="feature-card">
-              <h5>Campanhas</h5>
-              <p>
-                Criar disparos, anexos, agendamento e monitoramento em tempo
-                real.
+        {/* Features Section */}
+        <section id="features" className="features-section">
+          <div className="container">
+            <div className="section-header">
+              <h2 className="section-title">Recursos Poderosos</h2>
+              <p className="section-subtitle">
+                Tudo que você precisa para dominar o WhatsApp Business
               </p>
+            </div>
+            <div className="features-grid">
+              <div className="feature-card premium">
+                <div className="feature-icon purple">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
+                  </svg>
+                </div>
+                <h3 className="feature-title">Disparos em Massa</h3>
+                <p className="feature-description">
+                  Envie milhares de mensagens personalizadas com delivery garantido e rate limiting inteligente.
+                </p>
+                <ul className="feature-list">
+                  <li>✓ Até 100K mensagens/mês</li>
+                  <li>✓ Múltiplas instâncias</li>
+                  <li>✓ Anti-ban protection</li>
+                </ul>
+              </div>
+
+              <div className="feature-card premium">
+                <div className="feature-icon blue">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+                  </svg>
+                </div>
+                <h3 className="feature-title">Analytics Avançado</h3>
+                <p className="feature-description">
+                  Dashboard completo com métricas em tempo real, ROI tracking e insights acionáveis.
+                </p>
+                <ul className="feature-list">
+                  <li>✓ Dashboards interativos</li>
+                  <li>✓ ROI em tempo real</li>
+                  <li>✓ Relatórios customizados</li>
+                </ul>
+              </div>
+
+              <div className="feature-card premium">
+                <div className="feature-icon green">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                </div>
+                <h3 className="feature-title">Automação IA</h3>
+                <p className="feature-description">
+                  Chatbots inteligentes com processamento de linguagem natural e respostas automáticas.
+                </p>
+                <ul className="feature-list">
+                  <li>✓ Chatbot com IA</li>
+                  <li>✓ Funis automáticos</li>
+                  <li>✓ Segmentação inteligente</li>
+                </ul>
+              </div>
+
+              <div className="feature-card">
+                <div className="feature-icon orange">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                  </svg>
+                </div>
+                <h3 className="feature-title">Multi-Tenant</h3>
+                <p className="feature-description">
+                  Gerencie múltiplas empresas com isolamento completo de dados e permissões granulares.
+                </p>
+              </div>
+
+              <div className="feature-card">
+                <div className="feature-icon red">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                  </svg>
+                </div>
+                <h3 className="feature-title">Segurança Avançada</h3>
+                <p className="feature-description">
+                  Criptografia ponta-a-ponta, compliance LGPD e backups automáticos.
+                </p>
+              </div>
+
+              <div className="feature-card">
+                <div className="feature-icon teal">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                  </svg>
+                </div>
+                <h3 className="feature-title">API Completa</h3>
+                <p className="feature-description">
+                  Integre com qualquer sistema usando nossa API REST robusta e documentação completa.
+                </p>
+              </div>
             </div>
           </div>
         </section>
 
-        <section className="mb-4">
-          <h2>Modelos de Planos</h2>
-          <div className="cards-grid">
-            <div className="feature-card text-center">
-              <h5>FREE (Trial)</h5>
-              <p className="muted-small">
-                100 mensagens/mês • 1 instância • 500 contatos • Marca d'água
+        {/* Pricing Section */}
+        <section id="pricing" className="pricing-section">
+          <div className="container">
+            <div className="section-header">
+              <h2 className="section-title">Planos que Escalam com Você</h2>
+              <p className="section-subtitle">
+                Escolha o plano ideal para o tamanho do seu negócio
               </p>
             </div>
-            <div className="feature-card text-center">
-              <h5>STARTER — R$79/mês</h5>
-              <p className="muted-small">
-                5.000 msgs • 2 instâncias • 5.000 contatos • Templates
-                ilimitados
-              </p>
-            </div>
-            <div className="feature-card text-center">
-              <h5>PRO — R$199/mês</h5>
-              <p className="muted-small">
-                20.000 msgs • 5 instâncias • 25.000 contatos • Automações • API
-              </p>
-            </div>
-            <div className="feature-card text-center">
-              <h5>ENTERPRISE — R$499/mês</h5>
-              <p className="muted-small">
-                100k+ msgs • instâncias ilimitadas • contatos ilimitados • IA •
-                White-label
-              </p>
+            <div className="pricing-grid">
+              <div className="pricing-card">
+                <div className="pricing-header">
+                  <h3 className="plan-name">Starter</h3>
+                  <div className="plan-price">
+                    <span className="price">R$ 0</span>
+                    <span className="period">/mês</span>
+                  </div>
+                  <p className="plan-description">Perfeito para começar</p>
+                </div>
+                <div className="pricing-features">
+                  <div className="feature-item">
+                    <svg className="check-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    100 mensagens/mês
+                  </div>
+                  <div className="feature-item">
+                    <svg className="check-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    1 instância WhatsApp
+                  </div>
+                  <div className="feature-item">
+                    <svg className="check-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    500 contatos
+                  </div>
+                  <div className="feature-item">
+                    <svg className="check-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    Suporte básico
+                  </div>
+                </div>
+                <a href="/signup" className="btn btn-plan">Começar Grátis</a>
+              </div>
+
+              <div className="pricing-card popular">
+                <div className="popular-badge">Mais Popular</div>
+                <div className="pricing-header">
+                  <h3 className="plan-name">Professional</h3>
+                  <div className="plan-price">
+                    <span className="price">R$ 99</span>
+                    <span className="period">/mês</span>
+                  </div>
+                  <p className="plan-description">Para empresas em crescimento</p>
+                </div>
+                <div className="pricing-features">
+                  <div className="feature-item">
+                    <svg className="check-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    5.000 mensagens/mês
+                  </div>
+                  <div className="feature-item">
+                    <svg className="check-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    2 instâncias WhatsApp
+                  </div>
+                  <div className="feature-item">
+                    <svg className="check-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    2.000 contatos
+                  </div>
+                  <div className="feature-item">
+                    <svg className="check-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    Analytics avançado
+                  </div>
+                  <div className="feature-item">
+                    <svg className="check-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    Automações
+                  </div>
+                  <div className="feature-item">
+                    <svg className="check-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    Suporte prioritário
+                  </div>
+                </div>
+                <a href="/signup" className="btn btn-plan-popular">Começar Teste</a>
+              </div>
+
+              <div className="pricing-card">
+                <div className="pricing-header">
+                  <h3 className="plan-name">Enterprise</h3>
+                  <div className="plan-price">
+                    <span className="price">R$ 299</span>
+                    <span className="period">/mês</span>
+                  </div>
+                  <p className="plan-description">Para grandes empresas</p>
+                </div>
+                <div className="pricing-features">
+                  <div className="feature-item">
+                    <svg className="check-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    Mensagens ilimitadas
+                  </div>
+                  <div className="feature-item">
+                    <svg className="check-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    Instâncias ilimitadas
+                  </div>
+                  <div className="feature-item">
+                    <svg className="check-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    Contatos ilimitados
+                  </div>
+                  <div className="feature-item">
+                    <svg className="check-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    IA Avançada
+                  </div>
+                  <div className="feature-item">
+                    <svg className="check-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    White-label
+                  </div>
+                  <div className="feature-item">
+                    <svg className="check-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    Suporte 24/7
+                  </div>
+                </div>
+                <a href="/signup" className="btn btn-plan">Contatar Vendas</a>
+              </div>
             </div>
           </div>
         </section>
 
-        <section className="mb-4">
-          <h2>Timeline Resumida</h2>
-          <p>
-            <strong>Mês 1-2:</strong> Fundação — setup, autenticação, schema.
-          </p>
-          <p>
-            <strong>Mês 3-4:</strong> Core — CRUD contatos, templates,
-            integração WhatsApp, campanhas.
-          </p>
-          <p>
-            <strong>Mês 5-6:</strong> Polish — pagamentos, analytics, UX e
-            lançamento beta.
-          </p>
+        {/* Stats Section */}
+        <section className="stats-section">
+          <div className="container">
+            <div className="stats-grid">
+              <div className="stat-item">
+                <div className="stat-number">{animatedNumbers.users.toLocaleString()}+</div>
+                <div className="stat-label">Empresas Ativas</div>
+              </div>
+              <div className="stat-item">
+                <div className="stat-number">{(animatedNumbers.messages / 1000).toFixed(0)}K+</div>
+                <div className="stat-label">Mensagens Enviadas</div>
+              </div>
+              <div className="stat-item">
+                <div className="stat-number">{animatedNumbers.satisfaction}%</div>
+                <div className="stat-label">Taxa de Satisfação</div>
+              </div>
+              <div className="stat-item">
+                <div className="stat-number">24/7</div>
+                <div className="stat-label">Suporte Técnico</div>
+              </div>
+            </div>
+          </div>
         </section>
 
-        <section className="mb-4">
-          <h2>Riscos e Mitigações</h2>
-          <ul>
-            <li>
-              <strong>Risco:</strong> Banimento WhatsApp — <em>Mitigação:</em>{" "}
-              rate limiting, múltiplos providers, compliance.
-            </li>
-            <li>
-              <strong>Risco:</strong> Atrasos no desenvolvimento —{" "}
-              <em>Mitigação:</em> MVP bem definido, buffer, cortar features.
-            </li>
-            <li>
-              <strong>Risco:</strong> Custos altos — <em>Mitigação:</em> começar
-              em plataformas baratas, otimizar queries.
-            </li>
-          </ul>
+        {/* CTA Section */}
+        <section className="cta-section">
+          <div className="container">
+            <div className="cta-content">
+              <h2 className="cta-title">Pronto para Transformar sua Comunicação?</h2>
+              <p className="cta-subtitle">
+                Junte-se a mais de 1.000 empresas que já aumentaram suas vendas em até 300% com nossa plataforma.
+              </p>
+              <div className="cta-actions">
+                <a href="/signup" className="btn btn-cta-primary">
+                  Começar Teste Grátis
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </a>
+                <a href="#pricing" className="btn btn-cta-secondary">Ver Preços</a>
+              </div>
+              <div className="cta-note">
+                ✅ Sem compromisso • ✅ Configuração em 5 minutos • ✅ Suporte incluído
+              </div>
+            </div>
+          </div>
         </section>
 
-        <section className="mb-4">
-          <h2>Próximos Passos Imediatos</h2>
-          <ol>
-            <li>Ler análise técnica e validar stack.</li>
-            <li>Calcular budget e decidir: sozinho ou contratar.</li>
-            <li>Executar primeira tarefa do roadmap.</li>
-          </ol>
-        </section>
-
-        <footer className="text-center mt-5 mb-5 text-muted">
-          <small>
-            Resumo gerado em: 26/10/2025 — Versão: Resumo Visual 1.0
-          </small>
+        {/* Footer */}
+        <footer className="footer">
+          <div className="container">
+            <div className="footer-content">
+              <div className="footer-brand">
+                <div className="brand">
+                  <div className="logo">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                      <rect width="32" height="32" rx="8" fill="url(#footerGradient)" />
+                      <path d="M8 12L16 8L24 12V20C24 22.2091 22.2091 24 20 24H12C9.79086 24 8 22.2091 8 20V12Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M16 8V16" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <defs>
+                        <linearGradient id="footerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#8B5CF6" />
+                          <stop offset="100%" stopColor="#06B6D4" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </div>
+                  <div className="brand-text">
+                    <span className="brand-name">WhatsApp SaaS</span>
+                    <span className="brand-tagline">Professional Platform</span>
+                  </div>
+                </div>
+                <p className="footer-description">
+                  A plataforma mais completa para disparos WhatsApp com tecnologia de ponta e suporte 24/7.
+                </p>
+              </div>
+              <div className="footer-links">
+                <div className="link-group">
+                  <h4>Produto</h4>
+                  <a href="#features">Recursos</a>
+                  <a href="#pricing">Preços</a>
+                  <a href="/signup">Teste Grátis</a>
+                  <a href="/api-docs">API</a>
+                </div>
+                <div className="link-group">
+                  <h4>Empresa</h4>
+                  <a href="/about">Sobre</a>
+                  <a href="/blog">Blog</a>
+                  <a href="/careers">Carreiras</a>
+                  <a href="/contact">Contato</a>
+                </div>
+                <div className="link-group">
+                  <h4>Suporte</h4>
+                  <a href="/help">Central de Ajuda</a>
+                  <a href="/docs">Documentação</a>
+                  <a href="/status">Status</a>
+                  <a href="/security">Segurança</a>
+                </div>
+                <div className="link-group">
+                  <h4>Legal</h4>
+                  <a href="/privacy">Privacidade</a>
+                  <a href="/terms">Termos</a>
+                  <a href="/cookies">Cookies</a>
+                  <a href="/gdpr">LGPD</a>
+                </div>
+              </div>
+            </div>
+            <div className="footer-bottom">
+              <div className="footer-copy">
+                © 2025 WhatsApp SaaS. Todos os direitos reservados.
+              </div>
+              <div className="footer-social">
+                <span>Siga-nos:</span>
+                <a href="#" className="social-link">Twitter</a>
+                <a href="#" className="social-link">LinkedIn</a>
+                <a href="#" className="social-link">YouTube</a>
+              </div>
+            </div>
+          </div>
         </footer>
       </div>
     </>

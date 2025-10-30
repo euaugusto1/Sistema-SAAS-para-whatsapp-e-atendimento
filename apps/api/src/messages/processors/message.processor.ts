@@ -9,6 +9,8 @@ interface MessageJob {
   instanceId: string;
   to: string;
   body: string;
+  mediaUrl?: string;
+  mediaType?: string;
 }
 
 @Processor('messages')
@@ -22,13 +24,20 @@ export class MessageProcessor {
 
   @Process('send-message')
   async sendMessage(job: Job<MessageJob>) {
-    const { messageId, instanceId, to, body } = job.data;
+    const { messageId, instanceId, to, body, mediaUrl, mediaType } = job.data;
 
-    this.logger.log(`Processing message ${messageId}`);
+    this.logger.log(`Processing message ${messageId}${mediaUrl ? ' with media' : ''}`);
 
     try {
-      // Send message via WhatsApp
-      const result = await this.whatsappService.sendMessage(instanceId, to, body);
+      // Prepare media object if available
+      const media = mediaUrl ? {
+        url: mediaUrl,
+        type: mediaType || 'image',
+        caption: body,
+      } : undefined;
+
+      // Send message via WhatsApp (with or without media)
+      const result = await this.whatsappService.sendMessage(instanceId, to, body, media);
 
       if (result.success) {
         // Update message status
@@ -37,7 +46,6 @@ export class MessageProcessor {
           data: {
             status: 'SENT',
             sentAt: new Date(),
-            externalId: result.messageId, // Store external ID from Evolution API
           },
         });
 
@@ -48,8 +56,7 @@ export class MessageProcessor {
           where: { id: messageId },
           data: {
             status: 'FAILED',
-            error: result.error || 'Unknown error',
-            failedAt: new Date(),
+            errorMessage: result.error || 'Unknown error',
           },
         });
 
@@ -70,8 +77,7 @@ export class MessageProcessor {
         where: { id: messageId },
         data: {
           status: 'FAILED',
-          error: error.message || 'Unknown error',
-          failedAt: new Date(),
+          errorMessage: error.message || 'Unknown error',
         },
       });
 

@@ -24,12 +24,13 @@ import { RequestLoggerMiddleware } from './common/middleware/request-logger.midd
         limit: 100, // 100 requests per minute per IP
       },
     ]),
-    BullModule.forRoot({
-      redis: {
-        host: process.env.REDIS_HOST || 'localhost',
-        port: parseInt(process.env.REDIS_PORT || '6379'),
-      },
-    }),
+    // BullModule disabled - Redis not running
+    // BullModule.forRoot({
+    //   redis: {
+    //     host: process.env.REDIS_HOST || 'localhost',
+    //     port: parseInt(process.env.REDIS_PORT || '6379'),
+    //   },
+    // }),
     PrismaModule,
     AuthModule,
     UsersModule,

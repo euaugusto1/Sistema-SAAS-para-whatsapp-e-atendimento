@@ -4,7 +4,12 @@ export interface IWhatsappProvider {
   disconnect(instanceId: string): Promise<void>;
   getQRCode(instanceId: string): Promise<string | null>;
   getStatus(instanceId: string): Promise<InstanceStatus>;
-  sendMessage(instanceId: string, to: string, message: string): Promise<SendMessageResult>;
+  sendMessage(
+    instanceId: string, 
+    to: string, 
+    message: string,
+    media?: { url: string; type: string; caption?: string; fileName?: string }
+  ): Promise<SendMessageResult>;
   isConnected(instanceId: string): Promise<boolean>;
 }
 
@@ -25,4 +30,5 @@ export interface SendMessageResult {
 export interface QRCodeData {
   qrCode: string | null;
   status: InstanceStatus;
+  message?: string;
 }

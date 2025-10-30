@@ -18,6 +18,15 @@ apiClient.interceptors.request.use((config) => {
       (config.headers as any).Authorization = `Bearer ${token}`;
     }
   }
+  
+  // Log da requisição
+  console.log('🌐 API Request:', {
+    method: config.method?.toUpperCase(),
+    url: config.url,
+    params: config.params,
+    data: config.data
+  });
+  
   return config;
 });
 
@@ -41,8 +50,25 @@ const processQueue = (error: any, token: string | null = null) => {
 };
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Log da resposta
+    console.log('✅ API Response:', {
+      method: response.config.method?.toUpperCase(),
+      url: response.config.url,
+      status: response.status,
+      data: response.data
+    });
+    return response;
+  },
   async (error) => {
+    // Log do erro
+    console.error('❌ API Error:', {
+      method: error.config?.method?.toUpperCase(),
+      url: error.config?.url,
+      status: error.response?.status,
+      error: error.response?.data
+    });
+    
     const originalRequest = error.config;
     if (!originalRequest) return Promise.reject(error);
 

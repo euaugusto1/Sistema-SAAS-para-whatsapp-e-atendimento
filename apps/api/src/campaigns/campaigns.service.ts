@@ -1,5 +1,5 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Queue } from 'bull';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCampaignDto } from './dto/create-campaign.dto';
@@ -15,6 +15,8 @@ export class CampaignsService {
   ) {}
 
   async create(organizationId: string, dto: CreateCampaignDto) {
+    this.logger.log(`Creating campaign for organization ${organizationId}`);
+    
     // Verify instance exists and belongs to organization
     const instance = await this.prisma.whatsappInstance.findFirst({
       where: {
@@ -29,7 +31,18 @@ export class CampaignsService {
 
     // Verify instance is connected
     if (instance.status !== 'CONNECTED') {
-      throw new BadRequestException('Instância WhatsApp não está conectada.');
+      this.logger.warn(`Instance ${dto.instanceId} is not connected. Status: ${instance.status}`);
+      throw new BadRequestException('Instância WhatsApp não está conectada. Por favor, conecte a instância antes de criar a campanha.');
+    }
+
+    // Get organization owner to set as creator
+    const organization = await this.prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { ownerId: true },
+    });
+
+    if (!organization) {
+      throw new BadRequestException('Organização não encontrada.');
     }
 
     // Create campaign
@@ -39,20 +52,37 @@ export class CampaignsService {
         name: dto.name,
         instanceId: dto.instanceId,
         templateId: dto.templateId,
-        message: dto.message,
         scheduledAt: dto.scheduledAt ? new Date(dto.scheduledAt) : null,
         status: 'DRAFT',
+        settings: dto.message ? { message: dto.message } : {},
+        createdById: organization.ownerId, // Use organization owner as creator
       },
     });
 
     // Create campaign recipients
     if (dto.contactIds && dto.contactIds.length > 0) {
+      // Get contacts with their phone numbers
+      const contacts = await this.prisma.contact.findMany({
+        where: {
+          id: { in: dto.contactIds },
+          organizationId,
+        },
+        select: { id: true, phone: true },
+      });
+
       await this.prisma.campaignRecipient.createMany({
-        data: dto.contactIds.map((contactId) => ({
+        data: contacts.map((contact) => ({
           campaignId: campaign.id,
-          contactId,
+          contactId: contact.id,
+          phone: contact.phone,
           status: 'PENDING',
         })),
+      });
+
+      // Update total recipients count
+      await this.prisma.campaign.update({
+        where: { id: campaign.id },
+        data: { totalRecipients: contacts.length },
       });
     }
 
@@ -124,11 +154,17 @@ export class CampaignsService {
       throw new BadRequestException('Apenas campanhas em rascunho podem ser editadas.');
     }
 
+    // Get current settings to merge with message if provided
+    const currentSettings = (campaign.settings as any) || {};
+    const updatedSettings = dto.message 
+      ? { ...currentSettings, message: dto.message }
+      : currentSettings;
+
     return this.prisma.campaign.update({
       where: { id },
       data: {
         ...(dto.name && { name: dto.name }),
-        ...(dto.message && { message: dto.message }),
+        ...(dto.message && { settings: updatedSettings }),
         ...(dto.scheduledAt && { scheduledAt: new Date(dto.scheduledAt) }),
       },
     });
@@ -194,7 +230,7 @@ export class CampaignsService {
   async pause(organizationId: string, id: string) {
     const campaign = await this.findOne(organizationId, id);
 
-    if (campaign.status !== 'RUNNING') {
+    if (campaign.status !== 'SENDING') {
       throw new BadRequestException('Apenas campanhas em execução podem ser pausadas.');
     }
 
@@ -215,7 +251,7 @@ export class CampaignsService {
 
     await this.prisma.campaign.update({
       where: { id },
-      data: { status: 'RUNNING' },
+      data: { status: 'SENDING' },
     });
 
     // Re-add to queue

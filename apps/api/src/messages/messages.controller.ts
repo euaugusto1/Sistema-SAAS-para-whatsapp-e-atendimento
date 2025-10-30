@@ -8,9 +8,13 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { MessagesService } from './messages.service';
 import { SendMessageDto } from './dto/send-message.dto';
+import { SendBulkMessageDto, GetGroupsDto } from './dto/send-bulk-message.dto';
 import { WebhookMessageDto } from './dto/webhook-message.dto';
 import { JwtAuthGuard } from '../auth/jwt.guard';
 import { OrganizationGuard } from '../common/guards/organization.guard';
@@ -65,6 +69,46 @@ export class MessagesController {
   @UseGuards(JwtAuthGuard, OrganizationGuard)
   retry(@Query('organizationId') organizationId: string, @Param('id') id: string) {
     return this.messagesService.retry(organizationId, id);
+  }
+
+  /**
+   * Send bulk messages with interval
+   */
+  @Post('bulk')
+  @UseGuards(JwtAuthGuard, OrganizationGuard)
+  sendBulk(@Body() dto: SendBulkMessageDto) {
+    return this.messagesService.sendBulk(dto);
+  }
+
+  /**
+   * Get groups from Evolution API
+   */
+  @Post('groups')
+  @UseGuards(JwtAuthGuard, OrganizationGuard)
+  getGroups(@Body() dto: GetGroupsDto) {
+    return this.messagesService.getGroups(dto);
+  }
+
+  /**
+   * Get bulk sending progress
+   */
+  @Get('bulk/:jobId/progress')
+  @UseGuards(JwtAuthGuard, OrganizationGuard)
+  getBulkProgress(@Param('jobId') jobId: string) {
+    return this.messagesService.getBulkProgress(jobId);
+  }
+
+  /**
+   * Upload media file and return base64 or URL
+   */
+  @Post('upload-media')
+  @UseGuards(JwtAuthGuard, OrganizationGuard)
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadMedia(
+    @UploadedFile() file: any,
+    @Query('organizationId') organizationId: string,
+  ) {
+    return this.messagesService.uploadMedia(file, organizationId);
   }
 
   /**
